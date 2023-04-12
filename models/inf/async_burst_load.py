@@ -8,6 +8,18 @@ import time
 import asyncio
 import aiohttp
 
+
+actual_delays = []
+last_task_start_time = 0
+actual_delay_filename = "actual_delays.txt"
+latencies_filename = "latencies.txt"
+
+
+def write_floats_to_file(floats, file_name):
+    with open(file_name, 'w') as f:
+        for num in floats:
+            f.write(f'{num:.9f}\n')
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--ingress_host", required=True)
@@ -15,7 +27,7 @@ def get_args():
     parser.add_argument("--model_name", required=True)
     parser.add_argument("--trace_file", required=True)
     parser.add_argument("--delay_scale", required=True, type=float)
-    parser.add_argument("--num_trace_reads", required=False)
+    parser.add_argument("--num_trace_reads", required=False, type=int)
     #parser.add_argument("--average_delay", required=True, type=float, help="average time [in seconds, floating-point] to wait before sending a request")
     return parser.parse_args()
 
@@ -51,6 +63,9 @@ def gen_request(args):
 async def send_request_async(url, headers, data):
     async with aiohttp.ClientSession() as session:
         start_time = time.perf_counter()
+        actual_delays.append(start_time - last_task_start_time)
+        last_task_start_time = start_time
+
         async with session.post(url, headers=headers, data=data) as response:
             end_time = time.perf_counter()
             latency = (end_time - start_time) * 1000  # Convert the latency to milliseconds
@@ -62,6 +77,7 @@ async def main():
     url, headers, data = gen_request(args)
     
     tasks = []
+    last_task_start_time = time.perf_counter()
     for delay in delays:
         await asyncio.sleep(delay) # in seconds
         task = asyncio.ensure_future(send_request_async(url, headers, data))
@@ -70,6 +86,9 @@ async def main():
     latencies, _ = zip(*await asyncio.gather(*tasks))
     average_latency = sum(latencies) / len(latencies)
     print(f"Average request latency for {len(latencies)} requests: {average_latency:.2f} ms")
+
+    write_floats_to_file(actual_delays, actual_delay_filename)
+    write_floats_to_file(latencies, latencies_filename)
 
 if __name__ == '__main__':
     asyncio.run(main())

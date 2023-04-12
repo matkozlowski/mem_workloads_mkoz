@@ -2,7 +2,7 @@
 
 MODEL_NAME="${1:-resnet50v2tf}"
 TRACE_FILE="${2:-trace}"
-DELAY_SCALE="${3:-10}"
+DELAY_SCALE="${3:-1}"
 NUM_TRACE_READS="${4:-100000}"
 
 INGRESS_HOST=$(kubectl get svc istio-ingressgateway --namespace istio-system -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
