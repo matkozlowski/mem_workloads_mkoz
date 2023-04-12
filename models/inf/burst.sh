@@ -9,4 +9,4 @@ INGRESS_HOST=$(kubectl get svc istio-ingressgateway --namespace istio-system -o 
 INGRESS_PORT=80
 SERVICE_HOSTNAME=$(kubectl get inferenceservice ${MODEL_NAME} -o jsonpath='{.status.url}' | cut -d "/" -f 3)
 
-python3 inf.py --ingress_host ${INGRESS_HOST} --service_host ${SERVICE_HOSTNAME} --model_name ${MODEL_NAME} --trace_file ${TRACE_FILE} --delay_scale ${DELAY_SCALE} --num_trace_reads ${NUM_TRACE_READS}
+python3 async_burst_load.py --ingress_host ${INGRESS_HOST} --service_host ${SERVICE_HOSTNAME} --model_name ${MODEL_NAME} --trace_file ${TRACE_FILE} --delay_scale ${DELAY_SCALE} --num_trace_reads ${NUM_TRACE_READS}

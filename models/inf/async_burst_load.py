@@ -62,6 +62,8 @@ def gen_request(args):
     
 async def send_request_async(url, headers, data):
     async with aiohttp.ClientSession() as session:
+        global last_task_start_time
+        global actual_delays
         start_time = time.perf_counter()
         actual_delays.append(start_time - last_task_start_time)
         last_task_start_time = start_time
