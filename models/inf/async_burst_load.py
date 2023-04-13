@@ -7,6 +7,7 @@ from PIL import Image
 import time
 import asyncio
 import aiohttp
+from tqdm.asyncio import tqdm
 
 
 actual_delays = []
@@ -80,7 +81,7 @@ async def main():
     
     tasks = []
     last_task_start_time = time.perf_counter()
-    for delay in delays:
+    for delay in tqdm(delays, desc="Sending requests"):
         await asyncio.sleep(delay) # in seconds
         task = asyncio.ensure_future(send_request_async(url, headers, data))
         tasks.append(task)
