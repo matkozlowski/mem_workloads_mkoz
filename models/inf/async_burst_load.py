@@ -7,19 +7,25 @@ from PIL import Image
 import time
 import asyncio
 import aiohttp
-from tqdm.asyncio import tqdm
+from tqdm import tqdm
 
 
 actual_delays = []
 last_task_start_time = 0
 actual_delay_filename = "actual_delays.txt"
 latencies_filename = "latencies.txt"
+times_filename = "request_script_times.txt"
 
 
 def write_floats_to_file(floats, file_name):
     with open(file_name, 'w') as f:
         for num in floats:
             f.write(f'{num:.9f}\n')
+
+def write_current_time_to_file(file_name):
+    current_time_seconds = time.time()
+    with open(file_name, 'w') as f:
+        f.write(f'{current_time_seconds:.2f}\n')
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -79,12 +85,16 @@ async def main():
     delays = get_normalized_delays(args)
     url, headers, data = gen_request(args)
     
+    write_current_time_to_file(times_filename)
+
     tasks = []
     last_task_start_time = time.perf_counter()
     for delay in tqdm(delays, desc="Sending requests"):
         await asyncio.sleep(delay) # in seconds
         task = asyncio.ensure_future(send_request_async(url, headers, data))
         tasks.append(task)
+    
+    write_current_time_to_file(times_filename)
 
     latencies, _ = zip(*await asyncio.gather(*tasks))
     average_latency = sum(latencies) / len(latencies)
