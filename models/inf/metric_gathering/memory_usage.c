@@ -9,7 +9,7 @@
 #include <sys/types.h>
 
 #define BUFFER_SIZE 4096
-#define PAGE_SIZE 4096
+#define PAGE_SIZE_KB 4
 
 #define TOTAL_MEM_FILENAME "total_mem_usage.txt"
 #define TF_MEM_FILENAME "tf_mem_usage.txt"
@@ -41,13 +41,13 @@ void sigint_handler(int sig) {
     exit(0);
 }
 
-void buffer_store(unsigned long memory_usage_kb, MemoryUsageEntry buffer[], char *filename) {
-    buffer[buffer_pos].timestamp = time(NULL);
-    buffer[buffer_pos].memory_usage_kb = memory_usage_kb;
-    buffer_pos++;
-    if (buffer_pos >= BUFFER_SIZE) {
+void buffer_store(unsigned long memory_usage_kb, size_t *buffer_pos, MemoryUsageEntry buffer[], char *filename) {
+    buffer[*buffer_pos].timestamp = time(NULL);
+    buffer[*buffer_pos].memory_usage_kb = memory_usage_kb;
+    *buffer_pos += 1;
+    if (*buffer_pos >= BUFFER_SIZE) {
         write_buffer_to_file(filename, buffer);
-        buffer_pos = 0;
+        *buffer_pos = 0;
     }
 }
 
@@ -115,7 +115,7 @@ long get_memory_usage_of_tensorflow_processes_kb() {
                 unsigned long resident_pages;
                 if ((statm_file = fopen(statm_path, "r")) != NULL &&
                     fscanf(statm_file, "%*s %lu", &resident_pages) == 1) {
-                    total_memory_usage += resident_pages * PAGE_SIZE;
+                    total_memory_usage += resident_pages * PAGE_SIZE_KB;
                     fclose(statm_file);
                 }
             } else if (comm_file != NULL) {
@@ -135,12 +135,15 @@ long get_memory_usage_of_tensorflow_processes_kb() {
 int main() {
     signal(SIGINT, sigint_handler);
 
+    size_t total_buffer_pos = 0;
+    size_t tf_buffer_pos = 0;
+
     while (1) {
         unsigned long total_memory_usage_kb = get_total_memory_usage_kb();
-        buffer_store(total_memory_usage_kb, total_buffer, TOTAL_MEM_FILENAME);
+        buffer_store(total_memory_usage_kb, total_buffer_pos, total_buffer, TOTAL_MEM_FILENAME);
 
         unsigned long tf_memory_usage_kb = get_memory_usage_of_tensorflow_processes_kb();
-        buffer_store(tf_memory_usage_kb, tf_buffer, TF_MEM_FILENAME);
+        buffer_store(tf_memory_usage_kb, tf_buffer_pos, tf_buffer, TF_MEM_FILENAME);
 
         sleep(1);
     }
