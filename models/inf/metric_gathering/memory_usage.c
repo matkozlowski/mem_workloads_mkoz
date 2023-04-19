@@ -140,10 +140,10 @@ int main() {
 
     while (1) {
         unsigned long total_memory_usage_kb = get_total_memory_usage_kb();
-        buffer_store(total_memory_usage_kb, total_buffer_pos, total_buffer, TOTAL_MEM_FILENAME);
+        buffer_store(total_memory_usage_kb, &total_buffer_pos, total_buffer, TOTAL_MEM_FILENAME);
 
         unsigned long tf_memory_usage_kb = get_memory_usage_of_tensorflow_processes_kb();
-        buffer_store(tf_memory_usage_kb, tf_buffer_pos, tf_buffer, TF_MEM_FILENAME);
+        buffer_store(tf_memory_usage_kb, &tf_buffer_pos, tf_buffer, TF_MEM_FILENAME);
 
         sleep(1);
     }
