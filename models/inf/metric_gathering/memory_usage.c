@@ -21,9 +21,10 @@ typedef struct {
 
 MemoryUsageEntry total_buffer[BUFFER_SIZE];
 MemoryUsageEntry tf_buffer[BUFFER_SIZE];
-size_t buffer_pos = 0;
+size_t total_buffer_pos = 0;
+size_t tf_buffer_pos = 0;
 
-void write_buffer_to_file(char *filename, MemoryUsageEntry buffer[]) {
+void write_buffer_to_file(char *filename, size_t buffer_pos, MemoryUsageEntry buffer[]) {
     FILE *file = fopen(filename, "w");
     if (file) {
         for (size_t i = 0; i < buffer_pos; i++) {
@@ -36,8 +37,8 @@ void write_buffer_to_file(char *filename, MemoryUsageEntry buffer[]) {
 }
 
 void sigint_handler(int sig) {
-    write_buffer_to_file(TOTAL_MEM_FILENAME, total_buffer);
-    write_buffer_to_file(TF_MEM_FILENAME, tf_buffer);
+    write_buffer_to_file(TOTAL_MEM_FILENAME, total_buffer_pos, total_buffer);
+    write_buffer_to_file(TF_MEM_FILENAME, tf_buffer_pos, tf_buffer);
     exit(0);
 }
 
@@ -46,7 +47,7 @@ void buffer_store(unsigned long memory_usage_kb, size_t *buffer_pos, MemoryUsage
     buffer[*buffer_pos].memory_usage_kb = memory_usage_kb;
     *buffer_pos += 1;
     if (*buffer_pos >= BUFFER_SIZE) {
-        write_buffer_to_file(filename, buffer);
+        write_buffer_to_file(filename, *buffer_pos, buffer);
         *buffer_pos = 0;
     }
 }
@@ -134,9 +135,6 @@ long get_memory_usage_of_tensorflow_processes_kb() {
 
 int main() {
     signal(SIGINT, sigint_handler);
-
-    size_t total_buffer_pos = 0;
-    size_t tf_buffer_pos = 0;
 
     while (1) {
         unsigned long total_memory_usage_kb = get_total_memory_usage_kb();
