@@ -11,6 +11,9 @@
 #define BUFFER_SIZE 4096
 #define PAGE_SIZE 4096
 
+#define TOTAL_MEM_FILENAME "total_mem_usage.txt"
+#define TF_MEM_FILENAME "tf_mem_usage.txt"
+
 typedef struct {
     time_t timestamp;
     unsigned long memory_usage_kb;
@@ -33,17 +36,17 @@ void write_buffer_to_file(char *filename, MemoryUsageEntry buffer[]) {
 }
 
 void sigint_handler(int sig) {
-    write_buffer_to_file("total_mem_usage.txt", total_buffer);
-    write_buffer_to_file("tf_mem_usage.txt", tf_buffer);
+    write_buffer_to_file(TOTAL_MEM_FILENAME, total_buffer);
+    write_buffer_to_file(TF_MEM_FILENAME, tf_buffer);
     exit(0);
 }
 
-void buffer_store(unsigned long memory_usage_kb, MemoryUsageEntry buffer[]) {
+void buffer_store(unsigned long memory_usage_kb, MemoryUsageEntry buffer[], char *filename) {
     buffer[buffer_pos].timestamp = time(NULL);
     buffer[buffer_pos].memory_usage_kb = memory_usage_kb;
     buffer_pos++;
     if (buffer_pos >= BUFFER_SIZE) {
-        write_buffer_to_file();
+        write_buffer_to_file(filename, buffer);
         buffer_pos = 0;
     }
 }
@@ -134,10 +137,10 @@ int main() {
 
     while (1) {
         unsigned long total_memory_usage_kb = get_total_memory_usage_kb();
-        buffer_store(total_memory_usage_kb, total_buffer);
+        buffer_store(total_memory_usage_kb, total_buffer, TOTAL_MEM_FILENAME);
 
         unsigned long tf_memory_usage_kb = get_memory_usage_of_tensorflow_processes_kb();
-        buffer_store(tf_memory_usage_kb, tf_buffer);
+        buffer_store(tf_memory_usage_kb, tf_buffer, TF_MEM_FILENAME);
 
         sleep(1);
     }
