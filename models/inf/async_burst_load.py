@@ -62,6 +62,9 @@ def get_normalized_delays(args):
     
     # scale_by = args.average_delay / avg_trace_val
     scale_by = args.delay_scale
+
+    delays = delays[scale_by - 1 :: scale_by]
+
     for i in range(len(delays)):
         delays[i] = delays[i] * scale_by
         
