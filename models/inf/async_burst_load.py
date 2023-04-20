@@ -85,11 +85,14 @@ async def send_request_async(url, headers, data):
         actual_delays.append(start_time - last_task_start_time)
         last_task_start_time = start_time
 
-        async with session.post(url, headers=headers, data=data) as response:
-            end_time = time.perf_counter()
-            latency = (end_time - start_time) * 1000  # Convert the latency to milliseconds
-            stamped_latency = StampedLatency(timestamp=start_time, latency=latency)
-            return stamped_latency, await response.text()
+        try:
+            async with session.post(url, headers=headers, data=data) as response:
+                end_time = time.perf_counter()
+                latency = (end_time - start_time) * 1000  # Convert the latency to milliseconds
+                stamped_latency = StampedLatency(timestamp=start_time, latency=latency)
+                return stamped_latency, await response.text()
+        except aiohttp.client_exceptions.ServerDisconnectedError:
+            print("SERVER DISCONNECT ERROR for latency with start time of", start_time)
 
 async def main():
     args = get_args()
