@@ -4,7 +4,7 @@ import signal
 import sys
 
 
-POD_NAME_PREFIX = "resnet50v2tf-predictor-default-00001-deployment-"
+POD_NAME_PREFIX = "resnet50v2tf-predictor-default"
 
 
 class PodLogEntry:
@@ -80,7 +80,7 @@ def handle_pod_event(event):
     if not POD_NAME_PREFIX in name:
         return
     
-    id = name[name.find(POD_NAME_PREFIX) + len(POD_NAME_PREFIX):]
+    id = name[name.find(POD_NAME_PREFIX) + len(POD_NAME_PREFIX) + len('-00001-deployment-'):]
 
     # print(f"Event: {event_type}, ID: {id}, Status: {status}")
 
